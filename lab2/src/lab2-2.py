@@ -12,7 +12,6 @@ def cal_variance(t, hist_dict):
     meanb = nb / t
     meano = no / (256 - t)
     variance = t * (256-t) * ( (meanb - meano) ** 2 )
-    print(t, nb, no, meanb, meano, variance)
     return variance
 
 def main():
