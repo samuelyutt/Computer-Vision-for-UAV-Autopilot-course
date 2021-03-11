@@ -2,29 +2,28 @@ import cv2
 import numpy as np
 
 def histogram(img):
-    inten = np.zeros(256, np.uint8)
+    inten = np.zeros(256, np.uint32)
     for i in range(len(img)):
         for j in range(len(img[i])):
             inten[img[i,j,0]] += 1
-    print(inten)
     return inten
 
 def threshold(_sum):
     T = 0
     maxmi = -999
-    nB, nO = 0, 256
-    muB, muO = 0, np.average(_sum)
-    print(muB,muO)
+    nB, nO = 0, sum(_sum)
+    muB = 0
+    muO = sum([i*_sum[i] for i in range(256)]) / sum(_sum)
     for i in range(256):
-        muB = (muB*nB + _sum[i]) / (nB + 1)
-        muO = (muO*nO - _sum[i]) / (nO - 1)
-        nB = i + 1
-        nO = 255 - i
+        muB = (muB*nB + (_sum[i]*i)) / (nB + _sum[i])
+        muO = (muO*nO - (_sum[i]*i)) / (nO - _sum[i])
+        nB += _sum[i]
+        nO -= _sum[i]
         var_bet = nB * nO * ((muB - muO)**2)
         if var_bet>maxmi:
             maxmi = var_bet
             T = i
-        print(T, var_bet)
+    print('Threshold:', T)
     return T
 
 def OtsuProcess(img, T):
