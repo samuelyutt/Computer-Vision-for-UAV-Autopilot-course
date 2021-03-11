@@ -17,10 +17,10 @@ def equalized_histogram(hist):
         accu_pixel_num += hist[i]
         accu_pr[i] = accu_pixel_num / pixel_num
     quantized_output = [math.floor(i * 256) for i in accu_pr]
-    print(quantized_output)
+    return quantized_output
 
 def transform_img(img, eq_grey):
-    new_img = np.zeros((len(img[0]),len(img)), np.uint8)
+    new_img = np.zeros((len(img[0]),len(img), 1), np.uint8)
     for i in range(len(new_img[0])):
         for j in range(len(new_img[i])):
             new_img[i, j] = eq_grey[img[i, j]]
@@ -31,6 +31,6 @@ if __name__ == '__main__':
     img = cv2.imread('../img/mj.tif', cv2.IMREAD_GRAYSCALE)
     hist = calc_histogram(img)
     eq_grey = equalized_histogram(hist)
-    new_img = transform_img(img)
+    new_img = transform_img(img, eq_grey)
     cv2.imshow('trans_img', img)
     cv2.waitKey(0)
