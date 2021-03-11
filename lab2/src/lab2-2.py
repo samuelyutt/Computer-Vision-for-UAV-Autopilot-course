@@ -11,7 +11,9 @@ def cal_variance(t, hist_dict):
             no += hist_dict[i]
     meanb = nb / t
     meano = no / (256 - t)
-    variance = t * (256-t) * ( (meanb - meano) ** 2 )
+    variance = nb * no * ( (meanb - meano) ** 2 )
+    
+    print(t, variance, nb, no, meanb, meano)
     return variance
 
 def main():
@@ -33,7 +35,7 @@ def main():
         if tmp_variance > max_variance:
             max_variance = tmp_variance
             best_t = t
-    
+    print(best_t)
     i = 0
     for row in img:
         j = 0
