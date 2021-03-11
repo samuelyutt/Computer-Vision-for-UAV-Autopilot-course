@@ -28,9 +28,10 @@ def transform_img(img, eq_grey):
 
 
 if __name__ == '__main__':    
-    img = cv2.imread('../img/mj.tif', cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread('c:\\Users\\happy\\Downloads\\無人機\\Computer-Vision-for-UAV-Autopilot-course\\lab2\\img\\mj.tif', cv2.IMREAD_GRAYSCALE)
     hist = calc_histogram(img)
     eq_grey = equalized_histogram(hist)
     new_img = transform_img(img, eq_grey)
+    cv2.imshow('orig', img)
     cv2.imshow('trans_img', img)
     cv2.waitKey(0)
