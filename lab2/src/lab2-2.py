@@ -16,9 +16,6 @@ def cal_variance(t, hist_dict):
     meanb = b / nb
     meano = o / no
     variance = nb * no * ( (meanb - meano) ** 2 )
-    # variance = t * (256 - t) * ( (meanb - meano) ** 2 )
-    
-    print(t, variance, nb, no, meanb, meano)
     return variance
 
 def main():
@@ -26,22 +23,12 @@ def main():
     img = cv2.imread('../img/input.jpg')
     after_img = img.copy()
 
-    hist_dict = np.zeros(256, np.uint32)
-    # hist_dict = [1] * 256
+    hist_dict = np.zeros(256)
 
-    size = 0
     for row in img:
         for pixel in row:
-            intensity = np.uint( pixel[0] )
+            intensity = np.uint(pixel[0])
             hist_dict[intensity] += 1
-            size += 1
-
-    print(hist_dict)
-    s = 0
-    for it in hist_dict:
-        s += it
-
-    print(size, s)
 
     max_variance = -1
     best_t = 0
@@ -50,12 +37,14 @@ def main():
         if tmp_variance > max_variance:
             max_variance = tmp_variance
             best_t = t
+    
     print(best_t)
+    
     i = 0
     for row in img:
         j = 0
         for pixel in row:
-            intensity = int( pixel[0] )
+            intensity = int(pixel[0])
             if intensity > best_t:
                 after_img[i][j] = 255
             else:
