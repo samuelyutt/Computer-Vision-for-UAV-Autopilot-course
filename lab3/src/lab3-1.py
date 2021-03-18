@@ -33,7 +33,7 @@ while cap.isOpened():
                     if cc[i][j-1] > cc[i-1][j]:
                         cc[i][j] = cc[i-1][j]
                         map_dict[ cc[i][j-1] ] = cc[i-1][j]
-                    elif cc[i][j-1] < cc[i-1][j]:
+                    else:
                         cc[i][j] = cc[i][j-1]
                         map_dict[ cc[i-1][j] ] = cc[i][j-1]
 
