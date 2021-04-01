@@ -1,0 +1,10 @@
+#!/Users/samuelyu/Files/NCTU/4-2無人機自動飛航與電腦視覺概論/Homework/Computer-Vision-for-UAV-Autopilot-course/lab5/drone/bin/python3
+# -*- coding: utf-8 -*-
+import re
+import sys
+
+from numpy.f2py.f2py2e import main
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw?|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())

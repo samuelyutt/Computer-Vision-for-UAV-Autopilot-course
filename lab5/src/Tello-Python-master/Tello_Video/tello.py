@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 import numpy as np
+import cv2
 # import libh264decoder
 
 class Tello:
