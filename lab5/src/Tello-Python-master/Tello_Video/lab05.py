@@ -21,6 +21,16 @@ def drone_keyboard_control(drone):
     if key != -1:
         drone.keyboard(key)
 
+def drone_start_up(port=8889):
+    drone = tello.Tello('', port)
+    time.sleep(10)
+    return drone
+
+def drone_frame_read(drone):
+    frame = drone.read()
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    return frame
+
 def drone_calibrate(drone, filename='./calibrate.xml'):
     cnt = 0
     while cnt <= 50:
@@ -59,44 +69,42 @@ def drone_calibrate_read(filename='./calibrate.xml'):
 
     return intrinsic, distortion
 
-def drone_detect_aruco(frame, intrinsic, distortion):
+def drone_detect_aruco(frame, intrinsic, distortion, debug=False):
     # Detect the markers in the image
     markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
     frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
 
     rvec, tvec, _objPoints = cv2.aruco.estimatePoseSingleMarkers(markerCorners, 15, intrinsic, distortion)
     
-    try:
-        frame = cv2.aruco.drawAxis(frame, intrinsic, distortion, rvec, tvec, 8)
-        print(tvec)
-        print('x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]))
-        frame = cv2.putText(frame, 'x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
-        print('drawAxis')
-    except:
-        pass
+    if debug:
+        try:
+            frame = cv2.aruco.drawAxis(frame, intrinsic, distortion, rvec, tvec, 8)
+            print(tvec)
+            print('x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]))
+            frame = cv2.putText(frame, 'x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
+            print('drawAxis')
+        except:
+            pass
 
-    cv2.imshow("findCorners", frame)
-    # cv2.waitKey(15)
+        cv2.imshow("findCorners", frame)
+        # cv2.waitKey(15)
+    
+    return rvec, tvec, _objPoints
 
 def main():
-    drone = tello.Tello('', 8889)
-    time.sleep(10)
+    drone = drone_start_up()
 
+    frame = drone_frame_read(drone)
     # drone_calibrate(drone)
     intrinsic, distortion = drone_calibrate_read()
-    
 
     while(True):
-        frame = drone.read()
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-
-        drone_detect_aruco(frame, intrinsic, distortion)
-        
         drone_keyboard_control(drone)
-        
-
+        rvec, tvec, _objPoints = drone_detect_aruco(frame, intrinsic, distortion)
+    
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
     main()
+    
