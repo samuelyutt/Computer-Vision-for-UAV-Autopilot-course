@@ -42,7 +42,6 @@ def drone_calibrate(drone, filename='./calibrate.xml'):
     print(mtx)
     print(dist)
 
-
 def drone_calibrate_read(filename='./calibrate.xml'):
     f = cv2.FileStorage(filename, cv2.FILE_STORAGE_READ)
 
@@ -59,6 +58,8 @@ def drone_keyboard_control(drone):
     if key != -1:
         drone.keyboard(key)
 
+def move2Aruco(drone, tvec):
+    return
 
 def main():
     drone = tello.Tello('', 8889)
@@ -78,11 +79,9 @@ def main():
         rvec, tvec, _objPoints = cv2.aruco.estimatePoseSingleMarkers(markerCorners, 15, intrinsic, distortion)
         
         try:
-            frame = cv2.aruco.drawAxis(frame, intrinsic, distortion, rvec, tvec, 8)
-            print(tvec)
+            #frame = cv2.aruco.drawAxis(frame, intrinsic, distortion, rvec, tvec, 8)
             print('x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]))
-            frame = cv2.putText(frame, 'x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
-            print('drawAxis')
+            move2Aruco(drone, tvec)
         except:
             pass
         
