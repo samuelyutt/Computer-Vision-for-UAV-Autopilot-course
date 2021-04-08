@@ -70,13 +70,13 @@ def main():
     while(True):
         frame = drone.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-
+        
         # Detect the markers in the image
         markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
         frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
 
         rvec, tvec, _objPoints = cv2.aruco.estimatePoseSingleMarkers(markerCorners, 15, intrinsic, distortion)
-        
+        1
         try:
             frame = cv2.aruco.drawAxis(frame, intrinsic, distortion, rvec, tvec, 8)
             print(tvec)
@@ -85,9 +85,8 @@ def main():
             print('drawAxis')
         except:
             pass
-
+        
         cv2.imshow("findCorners", frame)
-        cv2.waitKey(15)
 
         drone_keyboard_control(drone)
 
