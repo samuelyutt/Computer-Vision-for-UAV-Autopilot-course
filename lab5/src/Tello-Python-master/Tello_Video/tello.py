@@ -57,6 +57,20 @@ class Tello:
 
         self.receive_video_thread.start()
 
+        #### ADDED PARAMS ####
+        # About Aruco
+        # Load the predefined dictionary
+        self.aruco_dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
+        # Initialize the detector parameters using default values
+        self.aruco_parameters = cv2.aruco.DetectorParameters_create()
+        
+        # Above moving and rotating
+        self.DIST = 130 # Fixed distance to Aruco
+        self.move_sensitivity = [15, 15, 50] # up/down, left/right, forward/backward
+        self.rot_sensitivity = 10
+        
+
+
     def __del__(self):
         """Closes the local socket."""
 
@@ -65,7 +79,7 @@ class Tello:
 
     def keyboard(self, key):
         print("key:", key)
-        distance = 0.3
+        distance = 0.9
         degree = 30
         
         if key == ord('1'):
@@ -506,3 +520,105 @@ class Tello:
         """
 
         return self.move('up', distance)
+
+    #### ADDED FUNCTIONS ####
+    def keyboard_control(self):
+        key = cv2.waitKey(1)
+        if key != -1:
+            self.keyboard(key)
+
+    def frame_read(self):
+        frame = self.read()
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        return frame
+
+    def calibrate(self, filename='./calibrate.xml'):
+        cnt = 0
+        while cnt <= 50:
+            print(cnt)
+            frame = self.read()
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            ret, corners = cv2.findChessboardCorners(gray, (w, h), None)
+
+            if ret == True:
+                cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+                objpoints.append(objp)
+                imgpoints.append(corners)
+                cnt += 1
+                cv2.drawChessboardCorners(frame, (w,h), corners, ret)
+                cv2.imshow('findCorners',frame)
+                cv2.waitKey(15)
+
+        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+
+        f = cv2.FileStorage(filename, cv2.FILE_STORAGE_WRITE)
+        f.write('intrinsic', mtx)
+        f.write('distortion', dist)
+        print(mtx)
+        print(dist)
+
+
+    def calibrate_read(self, filename='./calibrate.xml'):
+        f = cv2.FileStorage(filename, cv2.FILE_STORAGE_READ)
+
+        intrinsic_node = f.getNode('intrinsic')
+        distortion_node = f.getNode('distortion')
+
+        intrinsic = intrinsic_node.mat()
+        distortion = distortion_node.mat()
+
+        return intrinsic, distortion
+
+    def detect_aruco(self, frame, intrinsic, distortion, debug=False):
+        # Detect the markers in the image
+        markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, self.aruco_dictionary, parameters=self.aruco_parameters)
+        frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
+
+        rvec, tvec, _objPoints = cv2.aruco.estimatePoseSingleMarkers(markerCorners, 15, intrinsic, distortion)
+        
+        if debug:
+            try:
+                frame = cv2.aruco.drawAxis(frame, intrinsic, distortion, rvec, tvec, 8)
+                print(tvec)
+                print('x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]))
+                frame = cv2.putText(frame, 'x: ' + str(tvec[0][0][0]) + ' y: ' + str(tvec[0][0][1]) + ' z: ' + str(tvec[0][0][2]), (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
+                print('drawAxis')
+            except:
+                pass
+
+            cv2.imshow("findCorners", frame)
+            # cv2.waitKey(15)
+        
+        return rvec, tvec, _objPoints
+
+    def move_to_aruco(self, tvec, margin=self.move_sensitivity, DIST=self.DIST):
+        distance = 0.3
+        if tvec[0][0][2] > DIST + margin[2]:
+            self.move_forward(distance)
+        elif tvec[0][0][2] < DIST - margin[2]:
+            self.move_backward(distance)
+        
+        if tvec[0][0][1] < 0 - margin[1] :
+            self.move_up(distance)
+        elif tvec[0][0][1] > 0 + margin[1]:
+            self.move_down(distance)
+            
+        if tvec[0][0][0] < 0 - margin[0]:
+            self.move_left(distance)
+        elif tvec[0][0][0] > 0 + margin[0]:
+            self.move_right(distance)
+
+    def rotate_by_aruco(self, rvec, margin=self.rot_sensitivity):
+        rmat = cv2.Rodrigues(rvec)  #rmat is a tuple of (3*3 mat, 9*3 mat)
+        Zprime = np.matmul(rmat[0], np.array([[0, 0, 1]]).T)
+        Zprime[1] = 0 # project onto X-Z plane
+        V = Zprime
+        rad = math.atan2(V[2], V[0])
+        deg = math.degrees(rad)
+        deg += 90 # adjusting
+        
+        if deg > 0 + margin:
+            self.rotate_ccw(deg)
+        elif deg < 0 - margin:
+            self.rotate_cw(-deg)
