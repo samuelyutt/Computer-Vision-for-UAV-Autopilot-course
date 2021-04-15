@@ -9,7 +9,7 @@ objpoints = []
 imgpoints = []
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cnt = 0
 
 while cnt <= 50:
