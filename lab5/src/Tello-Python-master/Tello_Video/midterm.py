@@ -60,23 +60,30 @@ def drone_keyboard_control(drone):
     if key != -1:
         drone.keyboard(key)
 
-def move2Aruco(drone, tvec, margin):
+def move2Aruco(drone, tvec, margin, s_t=0.5):
     DIST = 90 # Fixed distance to Aruco
     distance = 0.3
     if tvec[0][0][2] > DIST + margin[2]:
         drone.move_forward(distance)
+        #sleep(s_t)
     elif tvec[0][0][2] < DIST - margin[2]/2:
         drone.move_backward(distance)
+        #sleep(s_t)
     
     if tvec[0][0][1] < 0 - margin[1]:
         drone.move_up(distance)
+        #sleep(s_t)
     elif tvec[0][0][1] > 0 + margin[1]:
         drone.move_down(distance)
+        #sleep(s_t)
         
     if tvec[0][0][0] < 0 - margin[0]:
         drone.move_left(distance)
+        #sleep(s_t)
     elif tvec[0][0][0] > 0 + margin[0]:
         drone.move_right(distance)
+        #sleep(s_t)
+    
 
 def rotAruco(drone, rvec, margin):
     rmat = cv2.Rodrigues(rvec)  #rmat is a tuple of (3*3 mat, 9*3 mat)
@@ -103,7 +110,7 @@ def crossTable(drone, s_t=4):
     sleep(s_t)
     drone.move_right(2)
     sleep(s_t)
-    drone.move_up(0.5)
+    drone.move_up(0.7)
     sleep(s_t)
     
 def overBoard(drone, s_t=4):
@@ -118,14 +125,62 @@ def overBoard(drone, s_t=4):
     drone.move_down(0.7)
     sleep(s_t)
     
+def afterOverBoard(drone, s_t=4):
+    print("after")
+    sleep(s_t)
+    drone.move_backward(1)
+    sleep(s_t)
+    drone.move_left(1)
+    sleep(s_t)
+    
 def go2Landing(drone, s_t=4):
     print("move to landing position")
     sleep(s_t)
-    drone.move_forward(1)
+    drone.move_forward(0.8)
     sleep(s_t)
     drone.rotate_cw(45)
     sleep(s_t)
-    drone.land()
+    drone.move_left(0.4)
+    sleep(s_t)
+    #drone.land()
+    
+def landing(drone, tvec, margin, s_t=0.5):
+    DIST = 70 # Fixed distance to Aruco
+    distance = 0.3
+    flag = True
+    if tvec[0][0][2] > DIST + margin[2]:
+        flag = False
+        drone.move_forward(distance)
+        #sleep(s_t)
+    elif tvec[0][0][2] < DIST - margin[2]/2:
+        flag = False
+        drone.move_backward(distance)
+        #sleep(s_t)
+    
+    if tvec[0][0][1] < 0 - margin[1]:
+        flag = False
+        drone.move_up(distance)
+        #sleep(s_t)
+    elif tvec[0][0][1] > 0 + margin[1]:
+        flag = False
+        drone.move_down(distance)
+        #sleep(s_t)
+        
+    if tvec[0][0][0] < 0 - margin[0]:
+        flag = False
+        drone.move_left(distance)
+        #sleep(s_t)
+    elif tvec[0][0][0] > 0 + margin[0]:
+        flag = False
+        drone.move_right(distance)
+        #sleep(s_t)
+    if flag:
+        print("landing......")
+        drone.land()
+        sleep(s_t)
+        drone.land()
+        return 7
+    return 6
     
 def main():
     drone = tello.Tello('', 8889)
@@ -148,6 +203,7 @@ def main():
         markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
         frame = cv2.aruco.drawDetectedMarkers(frame, markerCorners, markerIds)
         rvec, tvec, _objPoints = cv2.aruco.estimatePoseSingleMarkers(markerCorners, 15, intrinsic, distortion)
+        #print(markerIds)
         
         try:
             if state == 0:
@@ -157,25 +213,41 @@ def main():
                     rotAruco(drone, rvec, rot_sensitivity)
                 rotCount += 1
                 """
-                if int(markerIds[0][0]) == 3:
+                if int(markerIds[0][0]) == 7:
+                    state = 2
+                elif int(markerIds[0][0]) == 3:
                     state = 3
                 elif int(markerIds[0][0]) == 4:
                     state = 4
                 elif int(markerIds[0][0]) == 5:
                     state = 5
+            elif state == 2:
+                print("state:", state)
+                afterOverBoard(drone)
+                state = 0
             elif state == 3:
+                print("state:", state)
                 crossTable(drone)
                 state = 0
             elif state == 4:
+                print("state:", state)
                 overBoard(drone)
                 state = 0
             elif state == 5:
+                print("state:", state)
                 go2Landing(drone)
                 state = 6
             elif state == 6:
-                move2Aruco(drone, tvec, move_sensitivity)
-                # not yet done
-                
+                print("state:", state)
+                state = landing(drone, tvec, move_sensitivity)
+                if state == 7:
+                    print("state:", state)
+            elif state == 7:
+                sleep(5)
+                drone.move_forward(0.2)
+                sleep(5)
+                drone.land()
+                pass
         except:
             pass
         
