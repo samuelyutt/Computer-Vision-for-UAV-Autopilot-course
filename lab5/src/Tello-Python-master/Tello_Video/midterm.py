@@ -128,9 +128,11 @@ def overBoard(drone, s_t=4):
 def afterOverBoard(drone, s_t=4):
     print("after")
     sleep(s_t)
+    drone.move_left(0.6)
+    sleep(s_t)
     drone.move_backward(1)
     sleep(s_t)
-    drone.move_left(1)
+    drone.move_left(1.3)
     sleep(s_t)
     
 def go2Landing(drone, s_t=4):
@@ -146,7 +148,7 @@ def go2Landing(drone, s_t=4):
     
 def landing(drone, tvec, margin, s_t=0.5):
     DIST = 70 # Fixed distance to Aruco
-    distance = 0.3
+    distance = 0.2
     flag = True
     if tvec[0][0][2] > DIST + margin[2]:
         flag = False
@@ -175,11 +177,9 @@ def landing(drone, tvec, margin, s_t=0.5):
         drone.move_right(distance)
         #sleep(s_t)
     if flag:
-        print("landing......")
-        drone.land()
-        sleep(s_t)
-        drone.land()
+        print("land................")
         return 7
+    land_count = 0
     return 6
     
 def main():
@@ -192,6 +192,8 @@ def main():
     move_sensitivity = [15, 13, 50] # left/right, up/down, forward/backward
     rot_sensitivity = 10
     rotCount = 0
+    
+    ready2Land = 0
 
     state = 0
 
@@ -206,6 +208,10 @@ def main():
         #print(markerIds)
         
         try:
+            if int(markerIds[0][0]) == 11:
+                print("Reset")
+                state = 0
+                
             if state == 0:
                 move2Aruco(drone, tvec, move_sensitivity)
                 """
@@ -237,14 +243,20 @@ def main():
                 print("state:", state)
                 go2Landing(drone)
                 state = 6
-            elif state == 6:
                 print("state:", state)
+            elif state == 6:
                 state = landing(drone, tvec, move_sensitivity)
+                ready2Land += 1
+                if ready2Land % 100 == 0:
+                    print(ready2Land)
+                if ready2Land >= 1000:
+                    state = 7
+                    print("force landing")
                 if state == 7:
                     print("state:", state)
             elif state == 7:
                 sleep(5)
-                drone.move_forward(0.2)
+                drone.move_forward(0.3)
                 sleep(5)
                 drone.land()
                 pass
