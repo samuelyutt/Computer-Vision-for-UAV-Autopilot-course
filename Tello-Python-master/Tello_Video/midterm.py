@@ -84,7 +84,6 @@ def move2Aruco(drone, tvec, margin, s_t=0.5):
         drone.move_right(distance)
         #sleep(s_t)
     
-
 def rotAruco(drone, rvec, margin):
     rmat = cv2.Rodrigues(rvec)  #rmat is a tuple of (3*3 mat, 9*3 mat)
     Zprime = np.matmul(rmat[0], np.array([[0, 0, 1]]).T)
@@ -108,19 +107,19 @@ def crossTable(drone, s_t=4):
     sleep(s_t)
     drone.move_forward(1.5)
     sleep(s_t)
-    drone.move_right(2)
+    drone.move_right(2.1)
     sleep(s_t)
-    drone.move_up(0.7)
+    drone.move_up(0.8)
     sleep(s_t)
     
 def overBoard(drone, s_t=4):
     print("over board")
     sleep(s_t)
-    drone.move_forward(0.4)
+    drone.move_forward(0.7)
     sleep(s_t)
     drone.move_up(0.8)
     sleep(s_t)
-    drone.move_forward(1.2)
+    drone.move_forward(1.4)
     sleep(s_t)
     drone.move_down(0.7)
     sleep(s_t)
@@ -132,7 +131,7 @@ def afterOverBoard(drone, s_t=4):
     sleep(s_t)
     drone.move_backward(1)
     sleep(s_t)
-    drone.move_left(1.3)
+    drone.move_left(1.4)
     sleep(s_t)
     
 def go2Landing(drone, s_t=4):
@@ -141,7 +140,7 @@ def go2Landing(drone, s_t=4):
     drone.move_forward(0.8)
     sleep(s_t)
     drone.rotate_cw(45)
-    sleep(s_t)
+    sleep(2)
     drone.move_left(0.4)
     sleep(s_t)
     #drone.land()
@@ -179,7 +178,7 @@ def landing(drone, tvec, margin, s_t=0.5):
     if flag:
         print("land................")
         return 7
-    land_count = 0
+    
     return 6
     
 def main():
@@ -211,6 +210,7 @@ def main():
             if int(markerIds[0][0]) == 11:
                 print("Reset")
                 state = 0
+                ready2Land = 0
                 
             if state == 0:
                 move2Aruco(drone, tvec, move_sensitivity)
@@ -247,20 +247,30 @@ def main():
             elif state == 6:
                 state = landing(drone, tvec, move_sensitivity)
                 ready2Land += 1
-                if ready2Land % 100 == 0:
-                    print(ready2Land)
-                if ready2Land >= 1000:
+                print(ready2Land)
+                if ready2Land >= 30:
                     state = 7
-                    print("force landing")
+                    print("force landing: correct too long")
                 if state == 7:
                     print("state:", state)
             elif state == 7:
-                sleep(5)
-                drone.move_forward(0.3)
-                sleep(5)
+                sleep(4)
+                drone.move_forward(0.5)
+                sleep(2)
                 drone.land()
                 pass
         except:
+            if state == 6:
+                ready2Land += 1
+                print(ready2Land)
+                if ready2Land >= 300:
+                    state = 7
+                    print("force landing: cannot detect Aruco")
+            if state == 7:
+                sleep(3)
+                drone.move_forward(0.5)
+                sleep(2)
+                drone.land()
             pass
         
         cv2.imshow("Drone", frame)
