@@ -592,7 +592,7 @@ class Tello:
         
         return rvec, tvec, _objPoints
 
-    def move_to_aruco(self, tvec, margin=self.move_sensitivity, DIST=self.DIST):
+    def move_to_aruco(self, tvec, margin=[15, 15, 50], DIST=130):
         distance = 0.3
         if tvec[0][0][2] > DIST + margin[2]:
             self.move_forward(distance)
@@ -609,7 +609,7 @@ class Tello:
         elif tvec[0][0][0] > 0 + margin[0]:
             self.move_right(distance)
 
-    def rotate_by_aruco(self, rvec, margin=self.rot_sensitivity):
+    def rotate_by_aruco(self, rvec, margin=10):
         rmat = cv2.Rodrigues(rvec)  #rmat is a tuple of (3*3 mat, 9*3 mat)
         Zprime = np.matmul(rmat[0], np.array([[0, 0, 1]]).T)
         Zprime[1] = 0 # project onto X-Z plane
