@@ -19,7 +19,7 @@ while(True):
     ret, frame = cap.read()
     
     # Detect body
-    rects, weights = hog.detectMultiScale(frame, winStride=(4,4), scale=1.1, useMeanshiftGrouping=False)
+    rects, weights = hog.detectMultiScale(frame, winStride=(4,4), scale=1.1, useMeanshiftGrouping=True)
     
     # Detect face
     face_rects = detector(frame, 0)
@@ -31,7 +31,7 @@ while(True):
                                  (rect[0] + rect[2], rect[1] + rect[3]), 
                                  (0, 255, 255), 2)
             height = rect[3]
-            dist = 156000 / height
+            dist = 200000 / height
             cv2.putText(frame, f'{dist}cm', (rect[0], rect[1] + rect[3]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
     except:
         print("No body detected.")
