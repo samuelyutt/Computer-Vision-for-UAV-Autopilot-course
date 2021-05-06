@@ -52,5 +52,6 @@ while(True):
     if key == ord('q') or key == 27: # Esc
         break
 
+
 cap.release()
 cv2.destroyAllWindows()
