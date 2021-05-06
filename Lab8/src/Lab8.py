@@ -19,19 +19,22 @@ while(True):
     ret, frame = cap.read()
     
     # Detect body
-    # rects, weights = hog.detectMultiScale(frame, winStride=(4,4), scale=1.1, useMeanshiftGrouping=False)
+    rects, weights = hog.detectMultiScale(frame, winStride=(4,4), scale=1.1, useMeanshiftGrouping=False)
     
     # Detect face
     face_rects = detector(frame, 0)
     
     # Draw body rectangles in yellow
-    # try:
-    #     for rect in rects:
-    #         cv2.rectangle(frame, (rect[0], rect[1]), 
-    #                              (rect[0] + rect[2], rect[1] + rect[3]), 
-    #                              (0, 255, 255), 2)
-    # except:
-    #     print("No body detected.")
+    try:
+        for rect in rects:
+            cv2.rectangle(frame, (rect[0], rect[1]), 
+                                 (rect[0] + rect[2], rect[1] + rect[3]), 
+                                 (0, 255, 255), 2)
+            height = rect[3]
+            dist = 156000 / height
+            cv2.putText(frame, f'{dist}cm', (rect[0], rect[1] + rect[3]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 1, cv2.LINE_AA)
+    except:
+        print("No body detected.")
 
     # Draw face rectangles in green
     try:
