@@ -19,6 +19,9 @@ while(True):
             cv2.rectangle(frame, (rect[0], rect[1]), 
                                  (rect[0] + rect[2], rect[1] + rect[3]), 
                                  (0, 255, 0), 2)
+            height = rect[3]
+            dist = 15000 / height
+            cv2.putText(frame, f'{dist}cm', (rect[0], rect[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1, cv2.LINE_AA)
     except:
         print("Not detected.")
         pass
