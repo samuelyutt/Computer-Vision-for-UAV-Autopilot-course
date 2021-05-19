@@ -5,20 +5,13 @@ from collections import Counter
 from time import sleep
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-url = "http://192.168.0.3:4747/video"
-#cap = cv2.VideoCapture(url)
-
-calibrate_file_name = './webCamCalibrate.xml'
 
 # Aruco related
 dictionary = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
 parameters = cv2.aruco.DetectorParameters_create()
 
-
-blue_lb = np.array([60, 10, 10])
-blue_hb = np.array([150, 60, 70])
-#blue_lb = np.array([100, 70, 70])
-#blue_hb = np.array([170, 255, 255])
+blue_lb = np.array([50, 10, 10])
+blue_hb = np.array([160, 70, 80])
 
 ignore_dir_dict = {
     'l': 'r',
@@ -41,8 +34,8 @@ def inBound(px):
     return True
 
 def readBlue(frame, ignore_dir):
-    margin_y = 80
-    margin_x = 80
+    margin_y = len(frame) // 4
+    margin_x = len(frame[0]) // 4
     center_y = len(frame) // 2
     center_x = len(frame[0]) // 2
     
@@ -59,15 +52,21 @@ def readBlue(frame, ignore_dir):
     for i in range(0, len(frame), sp):
         for j in range(0, len(frame[0]), sp):
             if inBound(frame[i][j]):
-                bf[i][j] = np.array([255, 255, 255])
-                if i < center_y - margin_y :
-                    cnt_dict['u'] += 1
-                elif i > center_y + margin_y:
-                    cnt_dict['d'] += 1
-                if j < center_x - margin_x:
-                    cnt_dict['l'] += 1
-                elif j > center_x + margin_x:
-                    cnt_dict['r'] += 1
+                #bf[i][j] = np.array([255, 255, 255])
+                if j > center_x - margin_x and j < center_x + margin_x:
+                    if i < center_y - margin_y:
+                        bf[i][j] = np.array([255, 255, 255])
+                        cnt_dict['u'] += 1
+                    elif i > center_y + margin_y:
+                        bf[i][j] = np.array([255, 255, 255])
+                        cnt_dict['d'] += 1
+                if i > center_y - margin_y and i < center_y + margin_y:
+                    if j < center_x - margin_x:
+                        bf[i][j] = np.array([255, 255, 255])
+                        cnt_dict['l'] += 1
+                    elif j > center_x + margin_x:
+                        bf[i][j] = np.array([255, 255, 255])
+                        cnt_dict['r'] += 1
     
     _max = cnt_dict.most_common(2)
     if _max[0][0] == ignore_dir:
@@ -92,7 +91,7 @@ def beforeStart():
             if int(markerIds[0][0]) == 4:
                 count += 1
                 #move2Aruco(drone, tvec, move_sensitivity)
-                if count > 50:
+                if count > 150:
                     break
         except:
             count = count - 5 if count > 0 else 0
@@ -112,7 +111,7 @@ if __name__ == "__main__":
     next_dir = 'r'
     
     vote = {'u':0, 'd':0, 'l':0, 'r':0}
-    vote_cnt = 6
+    vote_cnt = 15
     landFlag = False
     debugFlag = False
     
@@ -127,7 +126,6 @@ if __name__ == "__main__":
         # Read frame
         ret, frame = cap.read()
         BGR_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         
         # Detect Aruco
         markerCorners, markerIds, rejectedCandidates = cv2.aruco.detectMarkers(frame, dictionary, parameters=parameters)
@@ -138,8 +136,8 @@ if __name__ == "__main__":
         tmp_dir, bf = readBlue(hsv_frame, ignore_dir)
         vote[tmp_dir] += 1
         if vote_cnt == 0:
-            ignore_dir = ignore_dir_dict[tmp_dir]
             next_dir = Counter(vote).most_common(1)[0][0]
+            ignore_dir = ignore_dir_dict[next_dir]
             vote = {'u':0, 'd':0, 'l':0, 'r':0}
             
             '''
@@ -154,8 +152,7 @@ if __name__ == "__main__":
                 drone.move_right(dis)
             '''
             print(f'Move {dir_name_dict[next_dir]}')
-            #sleep(2)
-            vote_cnt = 6
+            vote_cnt = 15
             debugFlag = True
         else:
             vote_cnt -= 1
@@ -186,6 +183,5 @@ if __name__ == "__main__":
         if key == ord('q') or key == 27: # Esc
             tmp_frame = hsv_frame
             break
-    
     cap.release()
     cv2.destroyAllWindows()
