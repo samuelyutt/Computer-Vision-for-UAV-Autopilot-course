@@ -10,7 +10,7 @@ detector_SURF = cv2.xfeatures2d.SURF_create()
 detector_SIFT = cv2.xfeatures2d.SIFT_create()
 detector_ORB = cv2.ORB_create()
 
-# Selete which img_set and detector to use here
+# Select which img_set and detector to use here
 img_set = img_sets[0]
 detector = detector_ORB
 
