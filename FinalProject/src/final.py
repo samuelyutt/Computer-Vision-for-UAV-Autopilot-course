@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 orbslam2_data_path = '../data/orbslam2_testing_path_xyz.csv'
 colmap_data_path = '../data/colmap_testing_path_xyz.csv'
-match_p_idx = {'orb': 0, 'col': 3}
 
 
 def read_dataset():
@@ -87,7 +86,7 @@ def plot(pts_ORB, pts_COL):
 if __name__ == "__main__":
     # Read datasets and find matches
     points, orb_match_ps_idx, col_match_ps_idx = read_dataset()
-    print(0, points['orb'][match_p_idx['orb']], points['col'][match_p_idx['col']])
+    print(0, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
 
     # Move each center of models to the origin
     origin_col_mean = np.mean(points['col'], axis=0)
@@ -107,7 +106,7 @@ if __name__ == "__main__":
     ang = get_angle(points['orb'][orb_match_ps_idx[0]][:2], points['col'][col_match_ps_idx[0]][:2])
     rot_mtx = rotation_mtx(axis, ang)
     points['orb'] = np.matmul(rot_mtx, points['orb'].T).T
-    
+
     print(2, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
 
     # Rotate around a vector on XY-plane orthogonal to the projection vector of ORB_SLAM2 p0 to XY-plane
