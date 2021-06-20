@@ -86,7 +86,7 @@ def plot(pts_ORB, pts_COL):
 if __name__ == "__main__":
     # Read datasets and find matches
     points, orb_match_ps_idx, col_match_ps_idx = read_dataset()
-    print(0, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
+    print('ORB0 COL0', points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
 
     # Move each center of models to the origin
     origin_col_mean = np.mean(points['col'], axis=0)
@@ -98,7 +98,8 @@ if __name__ == "__main__":
              np.linalg.norm(points['orb'][orb_match_ps_idx[0]]))
     points['orb'] *= scale
 
-    print(1, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
+    print(f'Center both model to orgin and scale ORB_SLAM2 with {scale}')
+    print('ORB0 COL0', points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
 
     # Rotate around z-axis
     # Make the projection of ORB_SLAM2 p0 to XY-plane the same as the projection of COLMAP p0 to XY-plane
@@ -107,7 +108,8 @@ if __name__ == "__main__":
     rot_mtx = rotation_mtx(axis, ang)
     points['orb'] = np.matmul(rot_mtx, points['orb'].T).T
 
-    print(2, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
+    print(f'Rotate ORB_SLAM2 with an angle of {ang} RAD according to axis {axis}')
+    print('ORB0 COL0', points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
 
     # Rotate around a vector on XY-plane orthogonal to the projection vector of ORB_SLAM2 p0 to XY-plane
     # Make ORB_SLAM2 p0 the same as COLMAP p0
@@ -116,24 +118,33 @@ if __name__ == "__main__":
     rot_mtx = rotation_mtx(axis, ang)
     points['orb'] = np.matmul(rot_mtx, points['orb'].T).T
 
-    print(3, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
-    print(4, points['orb'][orb_match_ps_idx[1]], points['col'][col_match_ps_idx[1]])
+    print(f'Rotate ORB_SLAM2 with an angle of {ang} RAD according to axis {axis}')
+    print('ORB0 COL0', points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
+    print('ORB1 COL1', points['orb'][orb_match_ps_idx[1]], points['col'][col_match_ps_idx[1]])
 
     # Rotate around ORB_SLAM2 p0 vector
-    # Make ORB_SLAM2 p20 close to COLMAP p20
+    # Make ORB_SLAM2 p1 close to COLMAP p1
+    # Rotate center is the intersection of the axis and the plane which is orthogonal to the axis and has ORB_SLAM2 p1 on
     axis = points['orb'][orb_match_ps_idx[0]]
-    ang = get_angle(points['orb'][orb_match_ps_idx[20]], points['col'][col_match_ps_idx[20]])
+    rotate_center = axis * (np.dot(axis, points['orb'][orb_match_ps_idx[1]]) / np.dot(axis, axis))
+    ang = get_angle(
+        points['orb'][orb_match_ps_idx[1]] - rotate_center,
+        points['col'][col_match_ps_idx[1]] - rotate_center
+    )
     rot_mtx = rotation_mtx(axis, ang)
     points['orb'] = np.matmul(rot_mtx, points['orb'].T).T
 
-    print(5, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
-    print(6, points['orb'][orb_match_ps_idx[1]], points['col'][col_match_ps_idx[1]])
+    print(f'Rotate ORB_SLAM2 with an angle of {ang} RAD according to axis {axis}')
+    print(f'Rotate center {rotate_center}')
+    print('ORB0 COL0', points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
+    print('ORB1 COL1', points['orb'][orb_match_ps_idx[1]], points['col'][col_match_ps_idx[1]])
 
     # Move back to original COLMAP model coordinates
     points['orb'] += origin_col_mean
     points['col'] += origin_col_mean
 
-    print(7, points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
+    print(f'Move both model back to original COLMAP model coordinates')
+    print('ORB0 COL0', points['orb'][orb_match_ps_idx[0]], points['col'][col_match_ps_idx[0]])
 
     # Calcualte errors and statistics
     error_vecs = np.subtract(
@@ -142,7 +153,7 @@ if __name__ == "__main__":
     )
     error_dists = np.linalg.norm(error_vecs, axis=1)
     mean_square_error = np.mean(error_dists)
-    print(mean_square_error)
+    print('Mean error:', mean_square_error)
 
     # Plot both models
     plot(points['orb'], points['col'])
