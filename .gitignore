@@ -1,3 +1,7 @@
+ORB_SLAM2/
+Pangolin/
+.vscode/
+
 # macOS file system files
 **/.DS_Store
 
